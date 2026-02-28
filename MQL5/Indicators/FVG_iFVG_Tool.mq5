@@ -452,19 +452,49 @@ void EnforceMaxZones()
      }
   }
 
+void CopyZoneFields(Zone &dst,const Zone &src)
+  {
+   dst.id = src.id;
+   dst.symbol = src.symbol;
+   dst.tf = src.tf;
+   dst.origin_time = src.origin_time;
+   dst.bottom = src.bottom;
+   dst.top = src.top;
+   dst.is_bull = src.is_bull;
+   dst.state = src.state;
+   dst.deleted = src.deleted;
+
+   dst.first_touch_time = src.first_touch_time;
+   dst.fill_time = src.fill_time;
+   dst.invalidation_time = src.invalidation_time;
+   dst.retest_time = src.retest_time;
+
+   dst.alerted_new = src.alerted_new;
+   dst.alerted_touch = src.alerted_touch;
+   dst.alerted_fill = src.alerted_fill;
+   dst.alerted_inversion = src.alerted_inversion;
+   dst.alerted_retest = src.alerted_retest;
+   dst.alerted_rejection = src.alerted_rejection;
+   dst.last_alert_time = src.last_alert_time;
+  }
+
 void CompactDeletedZones()
   {
-   Zone kept[];
-   ArrayResize(kept,0);
-   for(int i=0; i<ArraySize(g_zones); i++)
+   int write_idx = 0;
+   int total = ArraySize(g_zones);
+
+   for(int read_idx=0; read_idx<total; read_idx++)
      {
-      if(g_zones[i].deleted)
+      if(g_zones[read_idx].deleted)
          continue;
-      int n = ArraySize(kept);
-      ArrayResize(kept,n+1);
-      kept[n] = g_zones[i];
+
+      if(write_idx != read_idx)
+         CopyZoneFields(g_zones[write_idx],g_zones[read_idx]);
+
+      write_idx++;
      }
-   g_zones = kept;
+
+   ArrayResize(g_zones,write_idx);
   }
 
 void ExpireOldZones(datetime now_time)
@@ -509,33 +539,31 @@ void AddZone(datetime origin_time,bool is_bull,double bottom,double top)
    if(FindZoneById(id) >= 0)
       return;
 
-   Zone z;
-   z.id = id;
-   z.symbol = _Symbol;
-   z.tf = (ENUM_TIMEFRAMES)_Period;
-   z.origin_time = origin_time;
-   z.bottom = bottom;
-   z.top = top;
-   z.is_bull = is_bull;
-   z.state = STATE_FRESH;
-   z.deleted = false;
-
-   z.first_touch_time = 0;
-   z.fill_time = 0;
-   z.invalidation_time = 0;
-   z.retest_time = 0;
-
-   z.alerted_new = false;
-   z.alerted_touch = false;
-   z.alerted_fill = false;
-   z.alerted_inversion = false;
-   z.alerted_retest = false;
-   z.alerted_rejection = false;
-   z.last_alert_time = 0;
-
    int n = ArraySize(g_zones);
    ArrayResize(g_zones,n+1);
-   g_zones[n] = z;
+
+   g_zones[n].id = id;
+   g_zones[n].symbol = _Symbol;
+   g_zones[n].tf = (ENUM_TIMEFRAMES)_Period;
+   g_zones[n].origin_time = origin_time;
+   g_zones[n].bottom = bottom;
+   g_zones[n].top = top;
+   g_zones[n].is_bull = is_bull;
+   g_zones[n].state = STATE_FRESH;
+   g_zones[n].deleted = false;
+
+   g_zones[n].first_touch_time = 0;
+   g_zones[n].fill_time = 0;
+   g_zones[n].invalidation_time = 0;
+   g_zones[n].retest_time = 0;
+
+   g_zones[n].alerted_new = false;
+   g_zones[n].alerted_touch = false;
+   g_zones[n].alerted_fill = false;
+   g_zones[n].alerted_inversion = false;
+   g_zones[n].alerted_retest = false;
+   g_zones[n].alerted_rejection = false;
+   g_zones[n].last_alert_time = 0;
 
    TriggerConfiguredAlerts(g_zones[n],"NEW_FVG");
    EnforceMaxZones();
