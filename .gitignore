@@ -1,0 +1,16 @@
+# MetaTrader 5 compiled / cache
+*.ex5
+*.log
+
+# Tester / logs (paths may vary)
+Tester/
+Logs/
+
+# Common generated files
+*.tmp
+*.bak
+*.old
+
+# OS junk
+.DS_Store
+Thumbs.db
